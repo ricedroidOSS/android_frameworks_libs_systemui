@@ -42,6 +42,8 @@ import com.android.launcher3.util.FlagOp;
  */
 public class BaseIconFactory implements AutoCloseable {
 
+    public static final int CONFIG_HINT_NO_WRAP = 0x1000000;
+
     private static final int DEFAULT_WRAPPER_BACKGROUND = Color.WHITE;
 
     private static final float ICON_BADGE_SCALE = 0.444f;
@@ -296,7 +298,7 @@ public class BaseIconFactory implements AutoCloseable {
             dr.setBounds(0, 0, 1, 1);
             boolean[] outShape = new boolean[1];
             scale = getNormalizer().getScale(icon, outIconBounds, dr.getIconMask(), outShape);
-            if (!outShape[0]) {
+            if (!outShape[0] && (icon.getChangingConfigurations() & CONFIG_HINT_NO_WRAP) == 0) {
                 FixedScaleDrawable fsd = ((FixedScaleDrawable) dr.getForeground());
                 fsd.setDrawable(icon);
                 fsd.setScale(scale);
