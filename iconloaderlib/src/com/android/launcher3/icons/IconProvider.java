@@ -124,9 +124,9 @@ public class IconProvider {
     /**
      * Loads the icon for the provided LauncherActivityInfo
      */
-    public Drawable getIcon(LauncherActivityInfo info, int iconDpi) {
+    public Drawable getIcon(LauncherActivityInfo info, int iconDpi, String themedIconPack) {
         return getIconWithOverrides(info.getApplicationInfo().packageName, info.getUser(), iconDpi,
-                () -> info.getIcon(iconDpi));
+                () -> info.getIcon(iconDpi), themedIconPack);
     }
 
     /**
@@ -142,11 +142,11 @@ public class IconProvider {
     public Drawable getIcon(ActivityInfo info, int iconDpi) {
         return getIconWithOverrides(info.applicationInfo.packageName,
                 UserHandle.getUserHandleForUid(info.applicationInfo.uid),
-                iconDpi, () -> loadActivityInfoIcon(info, iconDpi));
+                iconDpi, () -> loadActivityInfoIcon(info, iconDpi), null);
     }
 
     private Drawable getIconWithOverrides(String packageName, UserHandle user, int iconDpi,
-            Supplier<Drawable> fallback) {
+            Supplier<Drawable> fallback, String themedIconPack) {
         Drawable icon = null;
 
         int iconType = ICON_TYPE_DEFAULT;
@@ -171,7 +171,8 @@ public class IconProvider {
             iconType = ICON_TYPE_DEFAULT;
         }
 
-        ThemeData td = getThemedIconMap().get(packageName);
+        ThemeData td = getThemedIconMap(themedIconPack).get(packageName);
+
         return td != null ? td.wrapDrawable(icon, iconType) : icon;
     }
 
@@ -198,14 +199,24 @@ public class IconProvider {
         return icon;
     }
 
-    private Map<String, ThemeData> getThemedIconMap() {
+    private Map<String, ThemeData> getThemedIconMap(String themedIconPack) {
         if (mThemedIconMap != null) {
             return mThemedIconMap;
         }
         Map<String, ThemeData> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        boolean themedIconPackAvailable = false;
         try {
             Resources res = mContext.getResources();
-            int resID = res.getIdentifier(THEMED_ICON_MAP_FILE, "xml", mContext.getPackageName());
+            if (themedIconPack != null) {
+                try {
+                    res = mContext.getPackageManager().getResourcesForApplication(themedIconPack);
+                    themedIconPackAvailable = true;
+                } catch(NameNotFoundException e) {
+                    Log.e(TAG, "Themed icon pack " + themedIconPack + " does not exist!");
+                }
+            }
+            int resID = res.getIdentifier(THEMED_ICON_MAP_FILE, "xml",
+                themedIconPackAvailable ? themedIconPack : mContext.getPackageName());
             if (resID != 0) {
                 XmlResourceParser parser = res.getXml(resID);
                 final int depth = parser.getDepth();
@@ -228,6 +239,8 @@ public class IconProvider {
                         }
                     }
                 }
+            } else if (themedIconPackAvailable) {
+                Log.e(TAG, "Icon map does not exist in " + themedIconPack);
             }
         } catch (Exception e) {
             Log.e(TAG, "Unable to parse icon map", e);
@@ -249,7 +262,7 @@ public class IconProvider {
                 if (DEBUG) Log.d(TAG, "Got icon #" + id);
                 return resources.getDrawableForDensity(id, iconDpi, null /* theme */);
             }
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (NameNotFoundException e) {
             if (DEBUG) {
                 Log.d(TAG, "Could not get activityinfo or resources for package: "
                         + mCalendar.getPackageName());
