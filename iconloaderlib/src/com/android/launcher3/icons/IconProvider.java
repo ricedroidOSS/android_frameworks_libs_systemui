@@ -43,6 +43,8 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import com.android.launcher3.lineage.icon.IconPack;
+import com.android.launcher3.lineage.icon.providers.IconPackProvider;
 import com.android.launcher3.icons.ThemedIconDrawable.ThemeData;
 import com.android.launcher3.util.SafeCloseable;
 
@@ -148,6 +150,13 @@ public class IconProvider {
         Drawable icon = null;
 
         int iconType = ICON_TYPE_DEFAULT;
+        try {
+            icon = getFromIconPack(packageName);
+            if (icon != null) {
+                return icon;
+            }
+        } catch (Exception e) { }
+
         if (mCalendar != null && mCalendar.getPackageName().equals(packageName)) {
             icon = loadCalendarDrawable(iconDpi);
             iconType = ICON_TYPE_CALENDAR;
@@ -167,8 +176,13 @@ public class IconProvider {
     }
 
     private Drawable loadActivityInfoIcon(ActivityInfo ai, int density) {
-        final int iconRes = ai.getIconResource();
         Drawable icon = null;
+        final IconPack iconPack = IconPackProvider.loadAndGetIconPack(mContext);
+        if (iconPack != null) {
+            icon = iconPack.getIcon(ai, null, "");
+            if (icon != null) return icon;
+        }
+        final int iconRes = ai.getIconResource();
         // Get the preferred density icon from the app's resources
         if (density != 0 && iconRes != 0) {
             try {
@@ -373,5 +387,13 @@ public class IconProvider {
          * Called when the global icon state changed, which can typically affect all icons
          */
         void onSystemIconStateChanged(String iconState);
+    }
+
+    private Drawable getFromIconPack(String packageName) {
+        final IconPack iconPack = IconPackProvider.loadAndGetIconPack(mContext);
+        if (iconPack == null) {
+            return null;
+        }
+        return iconPack.getIcon(packageName, null, "");
     }
 }
