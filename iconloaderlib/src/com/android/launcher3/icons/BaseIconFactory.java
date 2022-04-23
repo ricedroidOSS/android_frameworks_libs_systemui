@@ -37,8 +37,8 @@ public class BaseIconFactory implements AutoCloseable {
 
     private static final String TAG = "BaseIconFactory";
     private static final int DEFAULT_WRAPPER_BACKGROUND = Color.WHITE;
-    static final boolean ATLEAST_OREO = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-    static final boolean ATLEAST_P = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P;
+    protected static final boolean ATLEAST_OREO = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+    protected static final boolean ATLEAST_P = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P;
 
     private static final float ICON_BADGE_SCALE = 0.444f;
 
@@ -57,8 +57,8 @@ public class BaseIconFactory implements AutoCloseable {
     private ShadowGenerator mShadowGenerator;
     private final boolean mShapeDetection;
 
-    private Drawable mWrapperIcon;
-    private int mWrapperBackgroundColor = DEFAULT_WRAPPER_BACKGROUND;
+    protected Drawable mWrapperIcon;
+    protected int mWrapperBackgroundColor = DEFAULT_WRAPPER_BACKGROUND;
     private Bitmap mUserBadgeBitmap;
 
     private final Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
@@ -286,7 +286,7 @@ public class BaseIconFactory implements AutoCloseable {
         mDisableColorExtractor = true;
     }
 
-    private Drawable normalizeAndWrapToAdaptiveIcon(@NonNull Drawable icon,
+    protected Drawable normalizeAndWrapToAdaptiveIcon(@NonNull Drawable icon,
             boolean shrinkNonAdaptiveIcons, RectF outIconBounds, float[] outScale) {
         if (icon == null) {
             return null;
