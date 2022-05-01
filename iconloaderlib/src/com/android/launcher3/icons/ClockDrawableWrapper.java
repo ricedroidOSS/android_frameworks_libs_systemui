@@ -118,9 +118,11 @@ public class ClockDrawableWrapper extends AdaptiveIconDrawable implements Bitmap
             Bundle extras = new Bundle();
             for (int i = 0; i < count; i += 2) {
                 TypedValue v = ta.peekValue(i + 1);
-                extras.putInt(ta.getString(i), v.type >= TypedValue.TYPE_FIRST_INT
+                if (v != null) {
+                    extras.putInt(ta.getString(i), v.type >= TypedValue.TYPE_FIRST_INT
                         && v.type <= TypedValue.TYPE_LAST_INT
                         ? v.data : v.resourceId);
+                }
             }
             ta.recycle();
             ClockDrawableWrapper drawable = ClockDrawableWrapper.forExtras(
